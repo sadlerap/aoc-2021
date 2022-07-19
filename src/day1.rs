@@ -1,30 +1,19 @@
-use aoc_runner_derive::aoc;
-use std::error::Error;
+use aoc_runner_derive::{aoc, aoc_generator};
 
-#[aoc(day1, part1)]
-fn part1(input: &str) -> Result<i32, Box<dyn Error>> {
-    let nums = input
+#[aoc_generator(day1)]
+fn generator(input: &str) -> Vec<i32> {
+    input
         .split('\n')
         .map(|x| x.parse::<i32>().unwrap())
-        .collect::<Vec<_>>();
+        .collect()
+}
 
-    Ok(nums.windows(2)
-        .map(|x| (x[0], x[1]))
-        .map(|(x, y)| if (y - x) > 0 { 1 } else { 0 })
-        .sum::<i32>())
+#[aoc(day1, part1)]
+fn part1(input: &[i32]) -> i32 {
+    input.windows(2).map(|x| (x[0] < x[1]) as i32).sum()
 }
 
 #[aoc(day1, part2)]
-fn part2(input: &str) -> Result<i32, Box<dyn Error>> {
-    let nums = input
-        .split('\n')
-        .map(|x| x.parse::<i32>().unwrap())
-        .collect::<Vec<_>>();
-    let first = &nums[0..(nums.len() - 1)];
-    let second = &nums[3..];
-    Ok(first
-        .iter()
-        .zip(second.iter())
-        .map(|(x, y)| if (y - x) > 0 { 1 } else { 0 })
-        .sum::<i32>())
+fn part2(input: &[i32]) -> i32 {
+    input.windows(4).map(|x| (x[0] < x[3]) as i32).sum()
 }
