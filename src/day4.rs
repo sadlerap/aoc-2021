@@ -1,7 +1,7 @@
 use aoc_runner_derive::aoc;
 use std::iter::*;
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, Default, PartialEq, Eq)]
 struct Number {
     pub number: u8,
     pub marked: bool,
@@ -19,7 +19,7 @@ impl Number {
 
 #[derive(Debug)]
 struct Board {
-    board: Vec<Number>,
+    board: [Number; 25],
 }
 
 impl Board {
@@ -29,7 +29,7 @@ impl Board {
         if let Some(cell) = self
             .board
             .iter_mut()
-            .find(|i| i.number == called_number && i.marked == false)
+            .find(|i| i.number == called_number && !i.marked)
         {
             cell.marked = true;
             true
@@ -72,11 +72,12 @@ impl Board {
     }
 }
 
-struct Bingo {
+pub struct Bingo {
     numbers: Vec<u8>,
     boards: Vec<Board>,
 }
 
+// #[aoc_generator(day5)]
 fn generator(input: &str) -> Bingo {
     let (first, rest) = input.split_once('\n').unwrap();
     let numbers = first
@@ -90,6 +91,8 @@ fn generator(input: &str) -> Bingo {
         .as_slice()
         .chunks(6)
         .map(|a| {
+            let mut board = [Number::default(); 25];
+
             a.iter()
                 .skip(1) //ignore leading whitespace
                 .flat_map(|s| {
@@ -98,9 +101,13 @@ fn generator(input: &str) -> Bingo {
                         marked: false,
                     })
                 })
-                .collect::<Vec<_>>()
+                .enumerate()
+                .for_each(|(i, num)| {
+                    board[i] = num;
+                });
+
+            Board { board }
         })
-        .map(|s| Board { board: s })
         .collect::<Vec<_>>();
 
     Bingo { numbers, boards }
