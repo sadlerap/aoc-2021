@@ -44,14 +44,14 @@ impl Board {
         for i in 0..5 {
             if ROW_OFFSETS
                 .iter()
-                .map(|x| self.board.get(x + i).expect("out of bounds"))
+                .map(|x| self.board[x + i])
                 .all(|x| x.is_marked())
             {
                 return true;
             }
             if COLUMN_OFFSETS
                 .iter()
-                .map(|x| self.board.get(5 * i + x).expect("out of bounds"))
+                .map(|x| self.board[5 * i + x])
                 .all(|x| x.is_marked())
             {
                 return true;
