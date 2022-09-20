@@ -1,6 +1,7 @@
+use rayon::prelude::*;
 use std::{
     borrow::Cow,
-    collections::{HashSet, VecDeque},
+    collections::{BTreeSet, VecDeque},
     str::FromStr,
 };
 
@@ -26,9 +27,12 @@ impl Grid {
     }
 
     pub fn is_low_point(&self, x: isize, y: isize) -> Option<u8> {
-        let value = self.get(x, y)?;
+        let value = self.try_get(x, y)?;
+        if value == 9 {
+            return None;
+        };
         for (dx, dy) in [(-1, 0), (1, 0), (0, -1), (0, 1)] {
-            if let Some(p) = self.get(x + dx, y + dy) {
+            if let Some(p) = self.try_get(x + dx, y + dy) {
                 if value >= p {
                     return None;
                 };
@@ -37,21 +41,21 @@ impl Grid {
         Some(value)
     }
 
-    fn get(&self, x: isize, y: isize) -> Option<u8> {
+    fn try_get(&self, x: isize, y: isize) -> Option<u8> {
         if x < 0 || x >= self.width || y < 0 || y >= self.height {
             None
         } else {
             self.data
                 .get((y * self.width + x) as usize)
                 .copied()
-                .or_else(|| panic!("Tried to index with {x}, {y}, got no value"))
         }
     }
 
-    pub fn size_of_basin_at(&self, x_pos: isize, y_pos: isize) -> u32 {
+    pub fn basin_at(&self, x_pos: isize, y_pos: isize) -> BTreeSet<(isize, isize)> {
         // starting at (x, y), flood fill until we hit 9s.
+        // keep track of points we've visit and want to visit; we don't want to check points twice.
         let mut point_queue = VecDeque::new();
-        let mut visited = HashSet::new();
+        let mut visited = BTreeSet::new();
         point_queue.push_back((x_pos, y_pos));
 
         while let Some((x, y)) = point_queue.pop_front() {
@@ -62,7 +66,7 @@ impl Grid {
                     continue;
                 }
 
-                if let Some(v) = self.get(new_x, new_y) {
+                if let Some(v) = self.try_get(new_x, new_y) {
                     if v != 9 {
                         // barrier
                         point_queue.push_back((new_x, new_y))
@@ -72,14 +76,15 @@ impl Grid {
             visited.insert((x, y));
         }
 
-        visited.len().try_into().unwrap()
+        visited
     }
 
     pub fn basin_sizes(&self) -> Vec<u32> {
         let mut basin_sizes = (0..self.height)
-            .flat_map(|y| (0..self.width).map(move |x| (x, y)))
+            .par_bridge()
+            .flat_map(|y| (0..self.width).map(move |x| (x, y)).collect::<Vec<_>>())
             .filter(|(x, y)| self.is_low_point(*x, *y).is_some())
-            .map(|(x, y)| self.size_of_basin_at(x, y))
+            .map(|(x, y)| self.basin_at(x, y).len() as u32)
             .collect::<Vec<_>>();
         basin_sizes.sort_by(|x, y| y.cmp(x));
         basin_sizes
@@ -90,7 +95,7 @@ impl Grid {
 fn generator(input: &str) -> Grid {
     // super annoying bug: aoc_runner strips trailing newlines from inputs, which makes calculating
     // the height here tricky.
-    let input = if input.chars().last() != Some('\n') {
+    let input = if input.ends_with('\n') {
         let mut x = String::from_str(input).unwrap();
         x.push('\n');
         Cow::Owned(x)

@@ -44,8 +44,8 @@ fn part1(input: &Problem) -> i64 {
                 ones += 1;
             }
         }
-        let res = if ones > zeros { 1 } else { 0 };
-        gamma |= (res as i64) << i;
+        let res = i64::from(ones > zeros);
+        gamma |= res << i;
     }
     let epsilon = (!gamma) & ((1 << input.num_bits) - 1);
 
