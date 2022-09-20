@@ -97,7 +97,7 @@ struct Grid {
 impl Grid {
     fn new(x: u32, y: u32) -> Grid {
         Grid {
-            data: vec![0_u8; ((x+1) as usize) * ((y+1) as usize)],
+            data: vec![0_u8; ((x + 1) as usize) * ((y + 1) as usize)],
             dim_y: y,
         }
     }
@@ -108,7 +108,9 @@ impl Grid {
 
     #[cfg(test)]
     fn get(&self, point: &Point) -> Option<u8> {
-        self.data.get(usize::try_from(point.x * self.dim_y + point.y).unwrap()).cloned()
+        self.data
+            .get(usize::try_from(point.x * self.dim_y + point.y).unwrap())
+            .cloned()
     }
 }
 
@@ -118,7 +120,11 @@ fn generator(input: &str) -> Map {
     let max_x = lines.iter().map(|l| l.p1.x.max(l.p2.x)).max().unwrap();
     let max_y = lines.iter().map(|l| l.p1.y.max(l.p2.y)).max().unwrap();
 
-    Map { lines, dim_x: max_x, dim_y: max_y }
+    Map {
+        lines,
+        dim_x: max_x,
+        dim_y: max_y,
+    }
 }
 
 #[aoc(day5, part1)]
